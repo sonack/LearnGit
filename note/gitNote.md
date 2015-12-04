@@ -302,7 +302,7 @@ $ git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Cre
 1.安装git
 $ sudo apt-get install git
 2.创建一个git用户,用来运行git服务
-# sudo adduser git
+$ sudo adduser git
 3.创建证书登陆
 收集所有需要登陆的用户的公钥(id_ras.pub文件)，把所有公钥导入到/home/git/.ssh/authorized_keys文件里，一行一个。
 4.初始化Git仓库:
