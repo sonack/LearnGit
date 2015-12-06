@@ -1701,5 +1701,180 @@ for (( exp1; exp2; exp3 )); do
 	commands
 done
 
+字符串和数字
+参数展开
+$a
+管理空变量的展开
+${parameter:-word}
+若parameter没有设置(例如不存在)或者为空，展开结果是word的值。
+若parameter不为空，展开结果是parameter的值。
+${parameter:=word}
+若parameter没有设置或者为空，展开结果是word的值，另外，word的值会赋值给parameter。若parameter不为空，展开结果是paramter的值。
+注意，位置参数或其他的特殊参数不能以这种方式赋值。
+${parameter:?word}
+若parameter没有设置或为空，这种展开导致脚本带有错误退出，并且word的内容会发送到stderr，若parameter不为空，展开结果是paramter的值
+${parameter:+word}
+若parameter没有设置或者为空，展开结果为空。若parameter不为空，展开结果是word的值,parameter的值不会改变。
 
+返回变量名的参数展开
+${!prefix*} 
+或者 
+${!prefix@}
+返回以prefix开头的已有变量名，根据bash文档，二者相同。
+
+字符串展开
+${#parameter}	展开成由parameter所包含的字符串的长度(parameter是字符串)
+		展开结果是位置参数的个数	(parameter是@或者*)
+
+${parameter:offset}
+${parameter:offset:length}
+展开字符串parameter的[offset,offset+length-1]字串
+如果不指定length,则到末尾
+
+若offset的值为负数，类似python的负数下标,注意负数前面必须有一个空格，为防止与${paramter:-word}的展开形式混淆。
+length>=0
+如果parameter是@，则展开结果是length个位置参数，从第offset个位置参数开始。
+
+${parameter#pattern}
+${parameter##pattern}
+会从parameter字符串中清楚开头的一部分文本，这些字符匹配定义的pattern
+#清除最短的匹配结果
+##清除最长的匹配结果
+
+${parameter%pattern}
+${parameter%%pattern}
+清除从parameter所包含字符串的末尾开始，其他类似${para#pattern}
+
+${parameter/pattern/string}
+${parameter//pattern/string}
+${parameter/#pattern/string}
+${parameter/%pattern/string}
+
+对parameter的内容执行查找和替换操作。如果找到了匹配通配符pattern的文本，则用string的内容替换它。在正常形式下，只有第一个匹配项会被替换掉。而//形式下，所有的匹配项都会被替换掉。/#要求匹配项出现在字符串的开头，而/%要求匹配项出现在字符串的末尾。/string可以省略掉，这样会导致删除匹配的文本。
+
+time命令计时
+
+大小写转换
+declare命令规范化字符串
+使用declare命令声明变量	declare -u upper
+			declare -l lower
+
+四个参数展开，用来执行大小写转换操作：
+\${parameter,,}	把parameter的值全部展开成小写字母
+\${parameter,}	仅仅把parameter的第一个字母展开成小写字母。
+\${parameter^^}	把parameter的值全部展开成大写字母
+\${parameter^}	仅仅把parameter的第一个字母展开成大写字母
+
+算术求值和展开
+进制:
+number		十进制
+0number		八进制
+0xnumber	16进制
+base#number	base进制
+
+一元运算符
++ -
+简单算术
++ - × / ××乘方 %(取模)
+shell算术只处理整数
+整数除法
+
+赋值运算符
+if (( foo=5 ))
+1)把5赋给foo
+2)计算测试条件为true
+=	+=	-=	*=	/=	%=
+++ -- 和C语言一致
+
+位运算符
+经常涉及设置或读取位标志
+~ << >> & | ^ 和C语言一致
+
+逻辑运算符
+<= >= < > == != && || exp1?exp2:exp3	和C语言完全一致 O(∩_∩)O~
+
+通过把赋值表达式用括号括起来，可以解决错误
+((a<1?(a+=1):(a-=1)))
+
+bc---一种高精度计算器语言
+如果需要执行更高级的数学运算或者浮点数运算
+无法只使用shell来完成，需要外部程序，可以采用嵌入的Perl或者AWK程序，或者使用专业的计算器程序，如bc。
+bc可以读取类似C语言的语法的bc语法脚本文件，或者stdin。
+bc -q (quiet)禁止显示版权信息
+quit 退出
+bc < foo.bc
+这种接受标准输入的能力，意味着我们可以使用here文档、here字符串、和管道来传递脚本。
+bc脚本中scale变量的值决定精度
+
+数组
+Bash中的数组仅限制为单一维度。
+对数组的支持第一次出现在bash版本2中,原来的Unix shell程序 sh 根本就不支持数组。
+创建一个数组:
+a[1]=foo	访问的时候会被自动地创建。
+访问时花括号是必需的，以防shell试图对数组元素名执行路径名展开操作
+
+declare命令创建一个数组
+declare -a a
+
+赋值:
+name[index]=value
+下标index从0开始。
+数组元素的值可以是一个字符串或者整数。
+多个值赋值使用下列语法:
+name=(value1 value2 ...)
+还可以指定下标
+days=([0]=Sun [1]=Mon [2]=Tue [3]=Wed [4]=Thu [5]=Fri [6]=Sat)
+
+访问数组元素
+数组操作
+输出整个数组的内容
+下表*和@可以被用来访问数组中的每一个元素。
+${animals[*]} 和 ${animals[@]}的行为一致
+"${animals[@]}"比"${animals[*]}"更有用
+
+确定数组元素个数
+${#a[@]}	#number of array elements
+#{#a[100]}	#length of element 100
+只把字符串赋给数组元素[100],bash报告数组中只有一个元素
+
+找到数组使用的下标:
+bash允许赋值的数组下表是离散的，所以需要确定哪些元素真正存在。
+${!array[*]}
+${!array[@]}
+
+在数组末尾添加元素
+foo+=(a b c)
+
+数组排序
+#!/bin/bash
+# array-sort : Sort an array
+a=(f e d c b a)
+echo "Original Array: ${a[@]}"
+a_sorted=($(for i in "${a[@]}"; do echo $i; done | sort))
+echo "Sorted Array: ${a_sorted[@]}"
+
+删除数组
+删除一个数组，使用unset命令
+unset arrayName
+unset 'array[index]' (用引号引起来防止shell执行路径名展开操作)
+给数组赋一个空值并不会清空数组的内容
+任何引用一个不带下标的数组元素，则指的是数组元素0
+
+关联数组
+最新的bash版本支持关联数组，关联数组使用字符串而不是整数作为数组索引。
+必须用declare -A colors 显式声明
+colors['red']='#ff0000'
+
+奇珍异宝
+组命令和子shell
+bash允许把命令组合在一起。两种方式:
+1.使用group命令
+{ command1; command2; [command3;...] } 花括号与命令之间必须有一个空格，并且最后一个命令必须用一个分号或者一个换行符终止
+2.使用子shell
+(command1; command2; [command3;...])
+{ ls -l; echo "Listing of foo.txt"; cat foo.txt; } > output.txt
+(ls -l; echo "Listing of foo.txt"; cat foo.txt) > output.txt
+
+把几个命令的输出结果合并成一个流，然后使用管道线技术
+{ ls -l; echo "Sample"; cat foo.txt; } | lpr
 
